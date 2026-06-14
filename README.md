@@ -2,7 +2,9 @@
 
 Goal: Become interview-ready for Forward Deployed Engineer roles at AI companies.
 
-Start date: June 6, 2026
+June 6, 2026: Start
+June 14, 2026: Week1 Python basics video tutorials done
+
 Target: Anthropic / OpenAI FDE roles
 
 ## Projects
