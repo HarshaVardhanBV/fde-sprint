@@ -50,6 +50,7 @@ disability, congenital anomaly, or medically important = serious.
 
 
 def extract_json(text: str) -> str:
+    """Strip markdown code fences Claude sometimes adds."""
     text = re.sub(r"^```(?:json)?\s*", "", text.strip())
     text = re.sub(r"\s*```$", "", text)
     return text
@@ -72,7 +73,7 @@ def triage_ae_report(request: TriageRequest):
     raw = message.content[0].text
 
     try:
-        data = json.loads(raw)
+        data = json.loads(extract_json(raw))
         return TriageResponse(**data)
     except (json.JSONDecodeError, KeyError) as e:
         raise HTTPException(
