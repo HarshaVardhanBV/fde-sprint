@@ -1,0 +1,9 @@
+id,type,groundedness,answer_relevance,correctness,reason
+q1_serious_criteria,grounded,5,5,5,"The answer fully covers all expected key points including the five serious criteria and the important medical events clause, all directly grounded in Source 1, and correctly addresses the question."
+q2_ae_definition,grounded,5,5,5,"The answer quotes the definition verbatim from Source 1, directly addresses the question, and covers both expected key points regarding untoward medical occurrence and lack of necessary causal relationship."
+q3_life_threatening,grounded,5,5,5,The answer is directly quoted from Source 1's note and covers both key points: patient at risk of death at the time and not hypothetical severity.
+q4_unexpected_adr,grounded,5,5,5,"The answer accurately quotes the definition from Source 1 and elaborates with Source 2's clarifications, fully covering both expected key points with proper grounding."
+q5_reporting_timeframes,grounded,5,5,1,"The answer is honest about the retrieved chunks not containing time frames, but the expected behaviour was to provide the 7-day and 15-day time frames, which the answer fails to deliver (the retrieval simply lacked the relevant chunk)."
+q6_hospitalization_required,grounded,5,5,5,"The answer directly and correctly states hospitalization is only one criterion, listing all others and the medical judgement clause, fully supported by Source 1."
+q7_ae_vs_adr,grounded,5,5,5,"The answer accurately quotes Source 1's definitions and clearly distinguishes AE (no necessary causal relationship) from ADR (reasonable possibility of causal relationship), covering both expected key points."
+q8_trap_out_of_scope,refusal,5,5,5,"The documents contain no aspirin dosing information, and the system correctly refused without inventing a dosage."

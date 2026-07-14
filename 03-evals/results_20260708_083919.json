@@ -1,0 +1,87 @@
+{
+  "rag_url": "https://reg-rag-production.up.railway.app/ask",
+  "answer_quality": 4.791666666666667,
+  "retrieval_quality": 4.571428571428571,
+  "rows": [
+    {
+      "id": "q1_serious_criteria",
+      "type": "grounded",
+      "context_relevance": 5,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer fully and accurately reflects Source 1, covering all serious criteria plus important medical events and the serious/severe distinction, matching all expected key points.",
+      "ctx_reason": "The first chunk explicitly lists all the criteria that make an adverse event serious (death, life-threatening, hospitalization, disability/incapacity, congenital anomaly, and important medical events)."
+    },
+    {
+      "id": "q2_ae_definition",
+      "type": "grounded",
+      "context_relevance": 5,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer quotes the definition verbatim from Source 1 and covers both expected key points including the no-necessary-causal-relationship clause.",
+      "ctx_reason": "The first chunk provides the explicit definition of an adverse event as any untoward medical occurrence in a patient or subject administered a pharmaceutical product without necessarily having a causal relationship."
+    },
+    {
+      "id": "q3_life_threatening",
+      "type": "grounded",
+      "context_relevance": 5,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer directly quotes the source's NOTE and covers both expected key points: risk of death at the time of the event and not the hypothetical risk if more severe.",
+      "ctx_reason": "The first chunk explicitly defines 'life-threatening' as an event in which the patient was at risk of death at the time of the event, not one that hypothetically might have caused death if more severe."
+    },
+    {
+      "id": "q4_unexpected_adr",
+      "type": "grounded",
+      "context_relevance": 5,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer directly defines unexpected ADR using the exact wording from Source 1 and adds accurate supporting detail from Source 2, fully covering both expected key points and staying grounded in the sources.",
+      "ctx_reason": "The chunks explicitly define an unexpected adverse drug reaction as one whose nature or severity is not consistent with the applicable product information, with elaboration and examples."
+    },
+    {
+      "id": "q5_reporting_timeframes",
+      "type": "grounded",
+      "context_relevance": 2,
+      "groundedness": 5,
+      "answer_relevance": 4,
+      "correctness": 1,
+      "reason": "The answer honestly reflects the retrieved chunks, which indeed do not contain the specific 7-day and 15-day time frames, but the expected behaviour was to answer with those key points which are missing, so correctness is very low even though the refusal is grounded in what was retrieved.",
+      "ctx_reason": "The chunks discuss what should be reported and how, but do not specify the actual time frames (e.g., 7-day/15-day deadlines) for expedited reporting of serious unexpected reactions."
+    },
+    {
+      "id": "q6_hospitalization_required",
+      "type": "grounded",
+      "context_relevance": 5,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer correctly states hospitalization is not required and lists all alternative serious criteria plus medical judgement examples, all fully supported by Source 1.",
+      "ctx_reason": "The chunks explicitly list the criteria for a serious adverse event, showing hospitalization is one of several alternative criteria (death, life-threatening, disability, etc.) and not required, plus note that other important events without hospitalization can be serious."
+    },
+    {
+      "id": "q7_ae_vs_adr",
+      "type": "grounded",
+      "context_relevance": 5,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer accurately quotes both definitions from Source 1 and correctly identifies causality as the key distinction, covering both expected key points.",
+      "ctx_reason": "The first chunk provides explicit definitions of both adverse event (no causal relationship required) and adverse drug reaction (implies a reasonable causal relationship), fully enabling the distinction."
+    },
+    {
+      "id": "q8_trap_out_of_scope",
+      "type": "refusal",
+      "context_relevance": 1,
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The documents contain no aspirin dosing information, and the system correctly and honestly refused without inventing a dose.",
+      "ctx_reason": "The chunks are about ICH clinical safety data management and expedited reporting guidelines and contain no information about aspirin dosing for adults."
+    }
+  ]
+}

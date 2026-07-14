@@ -1,0 +1,78 @@
+[
+  {
+    "id": "q1_serious_criteria",
+    "type": "grounded",
+    "question": "What are the criteria that make an adverse event serious?",
+    "expected_points": [
+      "results in death",
+      "is life-threatening",
+      "requires or prolongs hospitalization",
+      "results in persistent or significant disability or incapacity",
+      "is a congenital anomaly or birth defect",
+      "important medical events that may jeopardize the patient"
+    ]
+  },
+  {
+    "id": "q2_ae_definition",
+    "type": "grounded",
+    "question": "What is the definition of an adverse event?",
+    "expected_points": [
+      "any untoward medical occurrence in a patient administered a pharmaceutical product",
+      "does not necessarily have a causal relationship with the treatment"
+    ]
+  },
+  {
+    "id": "q3_life_threatening",
+    "type": "grounded",
+    "question": "What does 'life-threatening' mean in the context of a serious adverse event?",
+    "expected_points": [
+      "the patient was at risk of death at the time of the event",
+      "not a hypothetical risk had the event been more severe"
+    ]
+  },
+  {
+    "id": "q4_unexpected_adr",
+    "type": "grounded",
+    "question": "What is an unexpected adverse drug reaction?",
+    "expected_points": [
+      "a reaction whose nature or severity is not consistent with the applicable product information",
+      "e.g. the investigator's brochure for an unapproved product"
+    ]
+  },
+  {
+    "id": "q5_reporting_timeframes",
+    "type": "grounded",
+    "question": "What are the time frames for expedited reporting of serious unexpected reactions?",
+    "expected_points": [
+      "fatal or life-threatening: as soon as possible, within 7 calendar days",
+      "other serious unexpected reactions: within 15 calendar days"
+    ]
+  },
+  {
+    "id": "q6_hospitalization_required",
+    "type": "grounded",
+    "question": "Does an adverse event require hospitalization to be considered serious?",
+    "expected_points": [
+      "no, hospitalization is only one of several criteria",
+      "death, life-threatening, disability, congenital anomaly or important medical events also qualify"
+    ]
+  },
+  {
+    "id": "q7_ae_vs_adr",
+    "type": "grounded",
+    "question": "What is the difference between an adverse event and an adverse drug reaction?",
+    "expected_points": [
+      "adverse event does not necessarily have a causal relationship with the product",
+      "adverse drug reaction implies a reasonable suspected causal relationship"
+    ]
+  },
+  {
+    "id": "q8_trap_out_of_scope",
+    "type": "refusal",
+    "question": "What is the recommended dose of aspirin for adults?",
+    "expected_points": [
+      "the system should say the answer is not in the provided documents",
+      "it must NOT invent a dosage"
+    ]
+  }
+]

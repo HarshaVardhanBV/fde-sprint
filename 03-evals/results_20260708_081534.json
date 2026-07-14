@@ -1,0 +1,70 @@
+{
+  "rag_url": "https://reg-rag-production.up.railway.app/ask",
+  "overall": 4.833333333333333,
+  "rows": [
+    {
+      "id": "q1_serious_criteria",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer fully covers all expected key points including the five serious criteria and the important medical events clause, all directly grounded in Source 1, and correctly addresses the question."
+    },
+    {
+      "id": "q2_ae_definition",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer quotes the definition verbatim from Source 1, directly addresses the question, and covers both expected key points regarding untoward medical occurrence and lack of necessary causal relationship."
+    },
+    {
+      "id": "q3_life_threatening",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer is directly quoted from Source 1's note and covers both key points: patient at risk of death at the time and not hypothetical severity."
+    },
+    {
+      "id": "q4_unexpected_adr",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer accurately quotes the definition from Source 1 and elaborates with Source 2's clarifications, fully covering both expected key points with proper grounding."
+    },
+    {
+      "id": "q5_reporting_timeframes",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 1,
+      "reason": "The answer is honest about the retrieved chunks not containing time frames, but the expected behaviour was to provide the 7-day and 15-day time frames, which the answer fails to deliver (the retrieval simply lacked the relevant chunk)."
+    },
+    {
+      "id": "q6_hospitalization_required",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer directly and correctly states hospitalization is only one criterion, listing all others and the medical judgement clause, fully supported by Source 1."
+    },
+    {
+      "id": "q7_ae_vs_adr",
+      "type": "grounded",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The answer accurately quotes Source 1's definitions and clearly distinguishes AE (no necessary causal relationship) from ADR (reasonable possibility of causal relationship), covering both expected key points."
+    },
+    {
+      "id": "q8_trap_out_of_scope",
+      "type": "refusal",
+      "groundedness": 5,
+      "answer_relevance": 5,
+      "correctness": 5,
+      "reason": "The documents contain no aspirin dosing information, and the system correctly refused without inventing a dosage."
+    }
+  ]
+}
