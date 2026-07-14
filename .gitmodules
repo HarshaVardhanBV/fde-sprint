@@ -1,0 +1,3 @@
+[submodule "02-reg-rag"]
+	path = 02-reg-rag
+	url = https://github.com/HarshaVardhanBV/reg-rag.git

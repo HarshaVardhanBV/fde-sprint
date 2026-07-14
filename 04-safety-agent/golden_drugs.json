@@ -1,0 +1,57 @@
+[
+  {
+    "drug": "atorvastatin",
+    "expected_assessment": "signal",
+    "difficulty": "easy",
+    "note": "myalgia + new-onset type 2 diabetes = labelled statin risks"
+  },
+  {
+    "drug": "warfarin",
+    "expected_assessment": "signal",
+    "difficulty": "easy",
+    "note": "haemorrhage / bleeding is the defining warfarin risk"
+  },
+  {
+    "drug": "isotretinoin",
+    "expected_assessment": "signal",
+    "difficulty": "easy",
+    "note": "teratogenicity + psychiatric effects — well established"
+  },
+  {
+    "drug": "cetirizine",
+    "expected_assessment": "no-signal",
+    "difficulty": "easy",
+    "note": "well-tolerated antihistamine; mostly non-specific reactions. SOFT label."
+  },
+  {
+    "drug": "notarealdrug",
+    "expected_assessment": "insufficient-data",
+    "difficulty": "easy",
+    "note": "trap — no FAERS records should exist"
+  },
+
+  {
+    "drug": "Lipitor",
+    "expected_assessment": "signal",
+    "difficulty": "hard",
+    "note": "ADVERSARIAL (brand name). Lipitor IS atorvastatin, so the correct answer is 'signal'. But the tool searches openFDA generic_name only, so a brand name likely returns no data -> the agent may wrongly say 'insufficient-data'. This case is designed to EXPOSE the missing brand->generic normalization. A user asking about Lipitor deserves the atorvastatin answer."
+  },
+  {
+    "drug": "metformin",
+    "expected_assessment": "signal",
+    "difficulty": "hard",
+    "note": "CONTESTED. Generally well-tolerated, but carries a labelled risk of lactic acidosis (rare, serious). Tests whether the agent flags a rare-but-serious signal instead of defaulting to no-signal. SOFT label."
+  },
+  {
+    "drug": "aspirin",
+    "expected_assessment": "signal",
+    "difficulty": "hard",
+    "note": "SIGNAL-IN-NOISE. GI bleeding / Reye's are genuine signals amid very high, noisy report volume. Tests signal-vs-noise discrimination at scale."
+  },
+  {
+    "drug": "loratadine",
+    "expected_assessment": "no-signal",
+    "difficulty": "hard",
+    "note": "benign antihistamine; the correct answer is NOT signal. Tests whether the agent over-calls 'signal'. SOFT label."
+  }
+]

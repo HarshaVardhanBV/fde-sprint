@@ -1,0 +1,104 @@
+{
+  "accuracy": 0.8888888888888888,
+  "rows": [
+    {
+      "drug": "atorvastatin",
+      "expected": "signal",
+      "difficulty": "easy",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale correctly cites mechanistically plausible statin risks (myalgia, new-onset diabetes) consistent with known atorvastatin safety data and explicitly declines to treat the serious_fraction as the signal justification."
+    },
+    {
+      "drug": "warfarin",
+      "expected": "signal",
+      "difficulty": "easy",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale explicitly sets aside the serious_fraction as expected and grounds its signal reasoning in specific warfarin-consistent reactions like elevated INR, drug interactions, and falls preceding bleeding events."
+    },
+    {
+      "drug": "isotretinoin",
+      "expected": "signal",
+      "difficulty": "easy",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale cites specific, well-known isotretinoin risks with supporting counts and explicitly declines to rely on the serious_fraction as the driver."
+    },
+    {
+      "drug": "cetirizine",
+      "expected": "no-signal",
+      "difficulty": "easy",
+      "got": "no-signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale accurately reflects the non-specific listed reactions and explicitly declines to treat the 0.548 serious fraction as a signal, attributing it to FAERS over-reporting."
+    },
+    {
+      "drug": "notarealdrug",
+      "expected": "insufficient-data",
+      "difficulty": "easy",
+      "got": "insufficient-data",
+      "match": true,
+      "confidence": "low",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale accurately reflects the empty dataset and correctly refrains from any serious_fraction-based reasoning since no data exists."
+    },
+    {
+      "drug": "Lipitor",
+      "expected": "signal",
+      "difficulty": "hard",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale correctly grounds the signal in well-established statin risks (myalgia, diabetes) and explicitly notes the serious_fraction is not the basis for the verdict."
+    },
+    {
+      "drug": "metformin",
+      "expected": "signal",
+      "difficulty": "hard",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale correctly cites specific serious reactions consistent with metformin's known pharmacology and explicitly discounts the serious_fraction as FAERS over-reporting rather than treating it as the signal justification."
+    },
+    {
+      "drug": "aspirin",
+      "expected": "signal",
+      "difficulty": "hard",
+      "got": "no-signal",
+      "match": false,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale accurately reflects the non-specific listed reactions and explicitly declines to treat the 0.698 serious fraction as a signal, correctly attributing it to FAERS reporting bias."
+    },
+    {
+      "drug": "loratadine",
+      "expected": "no-signal",
+      "difficulty": "hard",
+      "got": "no-signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale accurately reflects the cited mild reactions and 'drug ineffective' dominance, and explicitly declines to treat the 0.448 serious fraction as a signal justification."
+    }
+  ]
+}

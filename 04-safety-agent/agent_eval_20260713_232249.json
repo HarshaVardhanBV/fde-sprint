@@ -1,0 +1,55 @@
+{
+  "accuracy": 1.0,
+  "rows": [
+    {
+      "drug": "atorvastatin",
+      "expected": "signal",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale explicitly discounts the serious fraction as non-diagnostic and correctly bases the signal on the pharmacologically plausible, well-established statin risks of myalgia and dysglycemia."
+    },
+    {
+      "drug": "warfarin",
+      "expected": "signal",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale explicitly sets aside the high serious_fraction and instead grounds its signal on specific warfarin-consistent reactions (raised INR, interactions, falls) while appropriately noting causation limits."
+    },
+    {
+      "drug": "isotretinoin",
+      "expected": "signal",
+      "got": "signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale explicitly disclaims the serious fraction and grounds the signal in specific, clustered, mechanistically plausible reactions matching isotretinoin's known profile."
+    },
+    {
+      "drug": "cetirizine",
+      "expected": "no-signal",
+      "got": "no-signal",
+      "match": true,
+      "confidence": "medium",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale correctly ties non-specific reactions to cetirizine's known profile and explicitly discounts the 0.55 serious fraction as a FAERS reporting artifact rather than treating it as a signal."
+    },
+    {
+      "drug": "notarealdrug",
+      "expected": "insufficient-data",
+      "got": "insufficient-data",
+      "match": true,
+      "confidence": "low",
+      "grounded": 5,
+      "avoids_serious_trap": 5,
+      "reason": "The rationale accurately reflects the absence of any records and correctly concludes no signal can be assessed without relying on serious_fraction."
+    }
+  ]
+}
