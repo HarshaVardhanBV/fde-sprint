@@ -3,6 +3,7 @@ load_dotenv(override = True)
 
 import os
 import json
+import asyncio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import anthropic
@@ -15,7 +16,16 @@ from typing import List
 
 
 app = FastAPI(title="AE Triage API")
-client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env automatically
+client = anthropic.Anthropic()          # sync client for the single-report path
+aclient = anthropic.AsyncAnthropic()    # async client for concurrent batch triage
+
+# --- Model routing: pick the model by TASK, not one-size-fits-all -----------
+# Triage is extraction + a bounded classification — the high-volume, low-judgment
+# path. Route it to Haiku: ~10x cheaper and faster than Opus, with no quality loss
+# on structured extraction. (Reserve Opus for genuine judgment, e.g. the safety
+# agent's signal call.) Saying "I route by task" also signals production maturity.
+TRIAGE_MODEL = "claude-haiku-4-5-20251001"
+MAX_CONCURRENCY = 8                      # bound in-flight batch calls
 
 # --- Request & Response schemas ---
 
@@ -62,7 +72,7 @@ def triage_ae_report(request: TriageRequest):
         raise HTTPException(status_code=400, detail="Report text cannot be empty")
 
     message = client.messages.create(
-        model="claude-opus-4-8",
+        model=TRIAGE_MODEL,
         max_tokens=512,
         system=SYSTEM_PROMPT,
         messages=[
@@ -83,6 +93,23 @@ def triage_ae_report(request: TriageRequest):
 
 
 
+async def _triage_one(report_text: str, sem: asyncio.Semaphore):
+    """Triage a single report with the async client, bounded by a semaphore.
+    Returns a TriageResponse, or None so one bad row never fails the batch."""
+    async with sem:
+        try:
+            message = await aclient.messages.create(
+                model=TRIAGE_MODEL,
+                max_tokens=512,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": f"AE Report:\n{report_text}"}],
+            )
+            data = json.loads(extract_json(message.content[0].text))
+            return TriageResponse(**data)
+        except Exception:
+            return None
+
+
 @app.post("/triage/batch", response_model=List[TriageResponse])
 async def triage_batch(file: UploadFile = File(...)):
     # 1. Read and decode the uploaded CSV
@@ -94,29 +121,14 @@ async def triage_batch(file: UploadFile = File(...)):
     if "report" not in (reader.fieldnames or []):
         raise HTTPException(status_code=400, detail="CSV must have a 'report' column")
 
-    # 3. Triage each row
-    results = []
-    for row in reader:
-        report_text = row["report"].strip()
-        if not report_text:
-            continue  # skip empty rows
+    reports = [row["report"].strip() for row in reader if (row.get("report") or "").strip()]
 
-        message = client.messages.create(
-            model="claude-opus-4-8",
-            max_tokens=512,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": f"AE Report:\n{report_text}"}]
-        )
-
-        raw = message.content[0].text
-        try:
-            data = json.loads(extract_json(raw))
-            results.append(TriageResponse(**data))
-        except (json.JSONDecodeError, KeyError):
-            # Don't fail the whole batch for one bad row — skip it
-            continue
-
-    return results
+    # 3. Triage all rows CONCURRENTLY (bounded), preserving input order.
+    #    The old version was a sequential loop calling Opus per row — 500 rows
+    #    would time out. gather() fans out; the semaphore caps in-flight calls.
+    sem = asyncio.Semaphore(MAX_CONCURRENCY)
+    results = await asyncio.gather(*[_triage_one(r, sem) for r in reports])
+    return [r for r in results if r is not None]
 
 
 

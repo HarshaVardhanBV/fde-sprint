@@ -1,10 +1,16 @@
 """
 eval_agent.py — evaluate the safety-signal agent against a golden set of drugs.
 
-This is 03-evals discipline pointed at the agent. Two-level scoring:
+This is 03-evals discipline pointed at the agent. Three-level scoring:
   1. assessment label  -> DETERMINISTIC: does the agent's verdict match the
                           known-correct label? (exact match, no LLM needed)
-  2. rationale quality -> LLM-JUDGE: is the rationale grounded, and did it AVOID
+  2. signal detector   -> DETERMINISTIC: score the DISPROPORTIONALITY MATH on its
+                          own. Collapse the agent's computed PRR/ROR/IC rows into a
+                          label (signal if any reaction flags) and report precision,
+                          recall and F1 against the gold set — plus whether the LLM's
+                          narrative agrees with its own numbers. This is the new
+                          "signal precision" leg.
+  3. rationale quality -> LLM-JUDGE: is the rationale grounded, and did it AVOID
                           the serious-fraction trap? (a strong Claude grades it)
 
 We import and run the REAL agent (agent.run_agent) — we evaluate the deployed
@@ -54,6 +60,25 @@ def judge_rationale(drug: str, verdict: dict) -> dict:
     return data
 
 
+# ---- Level 2: the signal detector (deterministic, from the math) ----------
+def math_signal_label(signals):
+    """Collapse the agent's computed disproportionality rows into ONE label,
+    using the math alone (no LLM):
+      - 'insufficient-data' if no signal rows were computed,
+      - 'signal'            if any reaction flags (its PRR/ROR/IC criteria are met),
+      - 'no-signal'         if rows were computed but none flag.
+    Scoring this separately tells us whether the DETECTOR is right, independent of
+    how the model narrated it."""
+    if not signals:
+        return "insufficient-data"
+    return "signal" if any(s.get("signal") for s in signals) else "no-signal"
+
+
+def _fnum(x):
+    """Return x if it's a real number, else None (signal rows may carry a 'note')."""
+    return x if isinstance(x, (int, float)) else None
+
+
 # ---- Main ----------------------------------------------------------------
 def main():
     with open("golden_drugs.json") as f:
@@ -68,15 +93,33 @@ def main():
 
         if verdict is None:                      # the agent's JSON failed to parse
             rows.append({"drug": drug, "expected": expected, "difficulty": difficulty,
-                         "got": "PARSE_FAIL", "match": False, "grounded": 0,
-                         "avoids_serious_trap": 0, "reason": "verdict did not parse"})
+                         "got": "PARSE_FAIL", "match": False,
+                         "n_signals": 0, "flagged": 0, "max_prr": None, "max_ic": None,
+                         "math_label": "PARSE_FAIL", "math_match": False,
+                         "verdict_math_agree": False,
+                         "grounded": 0, "avoids_serious_trap": 0,
+                         "reason": "verdict did not parse"})
             continue
 
         vd = verdict.model_dump()
         match = (verdict.assessment == expected)
+
+        # ---- Level 2: score the disproportionality math on its own -----------
+        signals = verdict.signals or []
+        math_label = math_signal_label(signals)
+        prrs = [p for p in (_fnum(s.get("PRR")) for s in signals) if p is not None]
+        ics = [i for i in (_fnum(s.get("IC")) for s in signals) if i is not None]
+
         j = judge_rationale(drug, vd)
         rows.append({"drug": drug, "expected": expected, "difficulty": difficulty,
                      "got": verdict.assessment, "match": match, "confidence": verdict.confidence,
+                     "n_signals": len(signals),
+                     "flagged": sum(1 for s in signals if s.get("signal")),
+                     "max_prr": round(max(prrs), 2) if prrs else None,
+                     "max_ic": round(max(ics), 2) if ics else None,
+                     "math_label": math_label,
+                     "math_match": (math_label == expected),
+                     "verdict_math_agree": (verdict.assessment == math_label),
                      "grounded": j["grounded"], "avoids_serious_trap": j["avoids_serious_trap"],
                      "reason": j["reason"]})
         time.sleep(0.5)
@@ -95,24 +138,48 @@ def main():
     ec, en = split("easy")
     hc, hn = split("hard")
 
-    print("\n" + "=" * 82)
-    print("AGENT EVAL SCORECARD  (assessment = deterministic, grnd/trap = LLM-judged 1-5)")
-    print("=" * 82)
-    print(f"{'drug':<15}{'diff':<6}{'expected':<18}{'got':<18}{'ok':<5}{'grnd':<6}{'trap':<6}")
-    print("-" * 82)
+    # ---- Level 2 aggregates: the signal DETECTOR (math only) --------------
+    math_correct = sum(1 for r in rows if r.get("math_match"))
+    agree = sum(1 for r in rows if r.get("verdict_math_agree"))
+    #  Precision/recall for the positive class ('signal'), using the math label.
+    tp = sum(1 for r in rows if r["expected"] == "signal" and r.get("math_label") == "signal")
+    fp = sum(1 for r in rows if r["expected"] != "signal" and r.get("math_label") == "signal")
+    fn = sum(1 for r in rows if r["expected"] == "signal" and r.get("math_label") != "signal")
+    precision = tp / (tp + fp) if (tp + fp) else 0.0
+    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+
+    W = 100
+    print("\n" + "=" * W)
+    print("AGENT EVAL SCORECARD  (assessment + signal-detector = deterministic; grnd/trap = LLM-judged 1-5)")
+    print("=" * W)
+    print(f"{'drug':<14}{'diff':<5}{'expected':<16}{'got':<16}{'ok':<4}"
+          f"{'mathLbl':<16}{'maxPRR':>8}{'maxIC':>7}{'grnd':>6}{'trap':>6}")
+    print("-" * W)
     for r in rows:
-        print(f"{r['drug']:<15}{r.get('difficulty', '?'):<6}{r['expected']:<18}{str(r['got']):<18}"
-              f"{'Y' if r['match'] else 'N':<5}{r.get('grounded', 0):<6}{r.get('avoids_serious_trap', 0):<6}")
-    print("-" * 82)
-    print(f"Assessment accuracy: {correct}/{n} = {correct / n * 100:.0f}%"
+        print(f"{r['drug']:<14}{r.get('difficulty', '?'):<5}{r['expected']:<16}{str(r['got']):<16}"
+              f"{'Y' if r['match'] else 'N':<4}{str(r.get('math_label', '—')):<16}"
+              f"{str(r.get('max_prr', '—')):>8}{str(r.get('max_ic', '—')):>7}"
+              f"{r.get('grounded', 0):>6}{r.get('avoids_serious_trap', 0):>6}")
+    print("-" * W)
+    print(f"1) Assessment accuracy (LLM verdict): {correct}/{n} = {correct / n * 100:.0f}%"
           f"    (easy {ec}/{en}, hard {hc}/{hn})")
-    print(f"Avg rationale — grounded: {avg('grounded'):.2f}/5   "
+    print(f"2) Signal detector (math only)      : {math_correct}/{n} = {math_correct / n * 100:.0f}%"
+          f"    precision {precision:.2f}  recall {recall:.2f}  F1 {f1:.2f}   (positive = 'signal')")
+    print(f"   Verdict <-> math agreement       : {agree}/{n} = {agree / n * 100:.0f}%"
+          f"    (does the narrative match its own numbers?)")
+    print(f"3) Avg rationale — grounded: {avg('grounded'):.2f}/5   "
           f"avoids-serious-trap: {avg('avoids_serious_trap'):.2f}/5")
-    print("=" * 82)
+    print("=" * W)
 
     stamp = time.strftime("%Y%m%d_%H%M%S")
     with open(f"agent_eval_{stamp}.json", "w") as f:
-        json.dump({"accuracy": correct / n, "rows": rows}, f, indent=2)
+        json.dump({"accuracy": correct / n,
+                   "signal_detector": {"accuracy": math_correct / n, "precision": precision,
+                                       "recall": recall, "f1": f1,
+                                       "tp": tp, "fp": fp, "fn": fn},
+                   "verdict_math_agreement": agree / n,
+                   "rows": rows}, f, indent=2)
     print(f"Saved agent_eval_{stamp}.json — this is your agent baseline.")
 
 

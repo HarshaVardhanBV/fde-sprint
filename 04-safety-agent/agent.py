@@ -21,6 +21,7 @@ import os
 import sys
 import json
 import re
+import math
 import requests
 import anthropic
 from typing import Literal, List, Optional
@@ -43,6 +44,9 @@ class Verdict(BaseModel):
     confidence: Literal["high", "medium", "low"]
     notable_reactions: List[str]
     serious_fraction: Optional[float] = None
+    # Exact disproportionality rows computed by the tool and attached by the loop
+    # (not reproduced by the model, so the numbers can't drift).
+    signals: Optional[List[dict]] = None
     rationale: str
 
 
@@ -106,6 +110,103 @@ def get_serious_reactions(drug: str, limit: int = 10) -> dict:
     return {"drug": drug, "top_serious_reactions": top}
 
 
+# ---------------------------------------------------------------------------
+# THE COMPUTE-A-DECISION TOOL — real disproportionality math, not a fraction.
+#
+#   The other three tools are document/count-in, structured-out. This one does
+#   the actual PV signal-detection statistics regulators use: it builds the 2x2
+#   contingency table for a drug-reaction pair from openFDA marginals and returns
+#   PRR, ROR, and the Information Component (IC, a BCPNN-style shrinkage measure
+#   that behaves like EBGM for our purpose — it stays near 0 when counts are too
+#   small to trust), each with a 95% interval, plus standard signal flags.
+#
+#   True EBGM needs a gamma-Poisson prior fitted across the WHOLE database; that
+#   can't be done from a handful of per-query calls, so IC (which has an analytic
+#   shrinkage) is the honest, computable stand-in. Flagged as such, not faked.
+# ---------------------------------------------------------------------------
+_FAERS_TOTAL = {"N": None}   # cache the all-reports denominator within a process
+
+
+def _meta_total(search: str = None) -> int:
+    """Total number of FAERS reports matching `search` (all reports if None)."""
+    params = {"limit": 1}
+    if search:
+        params["search"] = search
+    r = requests.get(OPENFDA, params=params, timeout=30)
+    if r.status_code == 404:
+        return 0
+    r.raise_for_status()
+    return r.json().get("meta", {}).get("results", {}).get("total", 0)
+
+
+def _faers_total() -> int:
+    if _FAERS_TOTAL["N"] is None:
+        _FAERS_TOTAL["N"] = _meta_total()
+    return _FAERS_TOTAL["N"]
+
+
+def compute_disproportionality(drug: str, reaction: str) -> dict:
+    """PRR / ROR / IC for ONE drug-reaction pair, from a 2x2 FAERS table.
+
+      a = reports with BOTH drug and reaction     b = drug reports without it
+      c = reaction reports with OTHER drugs        d = all other reports
+    """
+    base = f'patient.drug.openfda.generic_name:"{drug}"'
+    ev = f'patient.reaction.reactionmeddrapt.exact:"{reaction}"'
+    try:
+        a = float(_meta_total(f"{base} AND {ev}"))
+        n_drug = _meta_total(base)
+        n_event = _meta_total(ev)
+        N = _faers_total()
+    except Exception as e:
+        return {"drug": drug, "reaction": reaction, "error": str(e)}
+
+    if not N or not n_drug or not n_event or a < 1:
+        return {"drug": drug, "reaction": reaction, "a": int(a),
+                "note": "insufficient counts for a stable estimate"}
+
+    b, c, d = n_drug - a, n_event - a, N - n_drug - n_event + a
+    if min(b, c, d) < 0:
+        return {"drug": drug, "reaction": reaction, "note": "inconsistent marginals from openFDA"}
+
+    E = (n_drug * n_event) / N   # expected count under independence
+
+    def _ci(log_val, se):
+        return [round(math.exp(log_val - 1.96 * se), 2), round(math.exp(log_val + 1.96 * se), 2)]
+
+    out = {"drug": drug, "reaction": reaction, "a": int(a), "b": int(b),
+           "c": int(c), "d": int(d), "expected": round(E, 2)}
+
+    prr = (a / (a + b)) / (c / (c + d))
+    prr_se = math.sqrt(1 / a - 1 / (a + b) + 1 / c - 1 / (c + d))
+    out["PRR"] = round(prr, 2)
+    out["PRR_CI95"] = _ci(math.log(prr), prr_se)
+
+    if b > 0 and d > 0:
+        ror = (a * d) / (b * c)
+        ror_se = math.sqrt(1 / a + 1 / b + 1 / c + 1 / d)
+        out["ROR"] = round(ror, 2)
+        out["ROR_CI95"] = _ci(math.log(ror), ror_se)
+
+    denom = (a + b) * (c + d) * (a + c) * (b + d)
+    chi2 = (N * (abs(a * d - b * c) - N / 2) ** 2 / denom) if denom > 0 and abs(a * d - b * c) > N / 2 else 0.0
+    out["chi2_yates"] = round(chi2, 2)
+
+    ic = math.log2((a + 0.5) / (E + 0.5))
+    ic_var = (1 / math.log(2) ** 2) * ((N - a) / (a * (1 + N))
+             + (N - n_drug) / (n_drug * (1 + N)) + (N - n_event) / (n_event * (1 + N)))
+    out["IC"] = round(ic, 2)
+    out["IC_CI95"] = [round(ic - 2 * math.sqrt(ic_var), 2), round(ic + 2 * math.sqrt(ic_var), 2)]
+
+    # Standard signal criteria. Note the a>=3 guard: a huge ratio on 1-2 reports
+    # is noise, so it must NOT flag — the intervals/shrinkage enforce that.
+    out["signal_PRR"] = bool(out["PRR"] >= 2 and chi2 >= 4 and a >= 3)      # Evans 2001
+    out["signal_ROR"] = bool(out.get("ROR_CI95", [0])[0] > 1 and a >= 3)
+    out["signal_IC"] = bool(out["IC_CI95"][0] > 0)
+    out["signal"] = bool(out["signal_PRR"] or out["signal_ROR"] or out["signal_IC"])
+    return out
+
+
 # ===========================================================================
 # 2. THE TOOL SCHEMAS  — how the MODEL learns the tools exist and how to call them.
 #    The description is prompt engineering: it tells Claude WHEN to use each.
@@ -157,6 +258,26 @@ TOOLS = [
             "required": ["drug"],
         },
     },
+    {
+        "name": "compute_disproportionality",
+        "description": (
+            "Compute REAL signal-detection statistics for one drug-reaction pair: PRR, ROR, "
+            "and the Information Component (IC, a shrinkage measure) with 95% intervals and "
+            "signal flags, from the 2x2 FAERS contingency table. This is what decides whether "
+            "a reaction is genuinely disproportionate vs. just frequent. Call it on the 2-4 "
+            "most clinically concerning SERIOUS reactions after get_serious_reactions. Inputs "
+            "are a generic drug name and one reaction term (MedDRA PT, as returned by the other "
+            "tools, e.g. 'RHABDOMYOLYSIS')."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "drug": {"type": "string", "description": "Generic drug name, e.g. 'atorvastatin'"},
+                "reaction": {"type": "string", "description": "Reaction term, e.g. 'RHABDOMYOLYSIS'"},
+            },
+            "required": ["drug", "reaction"],
+        },
+    },
 ]
 
 # Registry: tool name -> the Python function that actually runs it.
@@ -165,19 +286,22 @@ TOOL_FUNCS = {
     "get_adverse_events": get_adverse_events,
     "get_serious_event_count": get_serious_event_count,
     "get_serious_reactions": get_serious_reactions,
+    "compute_disproportionality": compute_disproportionality,
 }
 
 SYSTEM = """You are a pharmacovigilance assistant that produces a structured safety verdict.
 
-STEP 1 — Gather data first, using ALL THREE tools:
+STEP 1 — Gather data first:
   - get_adverse_events      -> WHICH reactions are reported overall (the breakdown)
   - get_serious_event_count -> HOW SERIOUS (what fraction of reports were serious)
   - get_serious_reactions   -> WHICH reactions appear among SERIOUS reports specifically
-Base "signal" decisions primarily on get_serious_reactions: the overall top-10 is dominated
-by high-volume minor complaints, so a critical event (e.g. GI haemorrhage) can be a real
-signal even when it is NOT in the overall top-10. Look at the serious breakdown before deciding.
 
-STEP 2 — When you have the data, reply with ONLY valid JSON (no prose, no markdown fences),
+STEP 2 — QUANTIFY the candidates. For the 2-4 most clinically concerning serious reactions
+from get_serious_reactions, call compute_disproportionality(drug, reaction). This returns the
+real signal-detection statistics — PRR, ROR, and IC with 95% intervals and signal flags. A
+reaction is a genuine signal only when it is DISPROPORTIONATE, not merely frequent.
+
+STEP 3 — When you have the data, reply with ONLY valid JSON (no prose, no markdown fences),
 matching exactly:
 {
   "drug": "<name>",
@@ -185,14 +309,16 @@ matching exactly:
   "confidence": "high" | "medium" | "low",
   "notable_reactions": ["<reaction>", ...],
   "serious_fraction": <number 0-1, or null>,
-  "rationale": "<2-3 sentences, grounded ONLY in the tool data>"
+  "rationale": "<2-3 sentences, citing the disproportionality of specific reactions>"
 }
+(Do NOT put the statistics in the JSON — the exact PRR/ROR/IC rows are attached automatically.)
 
 RULES (read carefully):
-- Call "signal" ONLY when specific serious reactions stand out that are consistent with a
-  known or plausible drug risk — NOT merely because serious_fraction is high.
-- FAERS OVER-REPORTS serious events, so a high serious_fraction (even 60-90%) is NORMAL and
-  is NOT by itself a signal. Do not treat it as one.
+- Decide "signal" from the DISPROPORTIONALITY results: a reaction flags when PRR>=2 with
+  chi-square>=4 and at least 3 reports, or the IC lower bound is above 0. A large ratio built
+  on 1-2 reports is noise, not a signal.
+- FAERS OVER-REPORTS serious events, so a high serious_fraction (even 60-90%) is NORMAL and is
+  NOT by itself a signal. Never justify a verdict with the serious_fraction.
 - Use "insufficient-data" when the tools return little or no data.
 - Never invent reactions; ground everything in the tool results.
 - This is reported-frequency data, not proven causation — let that lower your confidence."""
@@ -203,6 +329,7 @@ RULES (read carefully):
 # ===========================================================================
 def run_agent(user_question: str, max_turns: int = 5) -> str:
     messages = [{"role": "user", "content": user_question}]
+    signal_rows = []   # exact compute_disproportionality outputs, attached to the verdict
 
     for turn in range(1, max_turns + 1):
         print(f"\n--- turn {turn} ---")
@@ -219,6 +346,9 @@ def run_agent(user_question: str, max_turns: int = 5) -> str:
             raw = "".join(b.text for b in resp.content if b.type == "text")
             try:
                 verdict = Verdict(**json.loads(extract_json(raw)))
+                # Attach the exact statistics the tool computed (not model-reproduced).
+                if signal_rows and not verdict.signals:
+                    verdict.signals = signal_rows
                 print("\n=== VERDICT ===")
                 print(json.dumps(verdict.model_dump(), indent=2))
                 return verdict
@@ -237,6 +367,8 @@ def run_agent(user_question: str, max_turns: int = 5) -> str:
                     result = TOOL_FUNCS[block.name](**block.input)
                 except Exception as e:
                     result = {"error": str(e)}
+                if block.name == "compute_disproportionality" and "error" not in result:
+                    signal_rows.append(result)
                 print(f"[tool result] {json.dumps(result)[:200]}...")
                 tool_results.append({
                     "type": "tool_result",

@@ -1,0 +1,82 @@
+<svg viewBox="0 0 900 616" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+<title>Appendix — how the three point solutions interoperate</title>
+<desc>An appendix, not the headline. The portfolio is three independent point solutions (AE Triage, Regulatory Q&A, Safety Agent). This shows the OPTIONAL end-to-end composition available because they share typed contracts: intake, triage, a serious-or-not gate, the FAERS agent with PRR/ROR/IC disproportionality math, the ICH checker, an ICSR draft and human review, wrapped in traceability, visible evals and demo mode.</desc>
+<defs>
+<marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#8a8b8f"/></marker>
+<marker id="arR" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#c0392b"/></marker>
+<marker id="arG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,3 L0,6 Z" fill="#2e7d4f"/></marker>
+</defs>
+<rect x="0" y="0" width="900" height="616" fill="#f7f7f5"/>
+<text x="24" y="42" font-size="22" font-weight="700" fill="#1c1c1a">Appendix — how the three point solutions interoperate</text>
+<text x="24" y="66" font-size="13" fill="#55565a">Optional composition only. Each tool stands alone; because they share typed contracts, a client who wants an end-to-end path can chain them.</text>
+
+<rect x="24" y="104" width="140" height="74" rx="10" fill="#f7f7f5" stroke="#dcddd6" stroke-dasharray="5 4"/>
+<text x="94" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#55565a">Intake</text>
+<text x="94" y="153" text-anchor="middle" font-size="10.5" fill="#8a8b8f">AE report · batch CSV</text>
+<line x1="164" y1="141" x2="192" y2="141" stroke="#8a8b8f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<rect x="196" y="104" width="196" height="74" rx="10" fill="#ffffff" stroke="#b7b8b0"/>
+<rect x="340" y="112" width="44" height="17" rx="8" fill="#eef1f4" stroke="#dcddd6"/>
+<text x="362" y="124" text-anchor="middle" font-size="10" font-weight="700" fill="#3a5bd9">Haiku</text>
+<text x="210" y="138" font-size="15" font-weight="700" fill="#1c1c1a">AE Triage</text>
+<text x="210" y="159" font-size="10.5" fill="#55565a">P1 · extract + ICH-E2A seriousness</text>
+<line x1="392" y1="141" x2="414" y2="141" stroke="#8a8b8f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<polygon points="476,99 536,141 476,183 416,141" fill="#ffffff" stroke="#b7b8b0"/>
+<text x="476" y="145" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1c1c1a">serious?</text>
+
+<line x1="536" y1="141" x2="558" y2="141" stroke="#2e7d4f" stroke-width="1.8" marker-end="url(#arG)"/>
+<text x="548" y="132" text-anchor="middle" font-size="9.5" fill="#8a8b8f">no</text>
+<rect x="560" y="111" width="176" height="60" rx="10" fill="#ffffff" stroke="#2e7d4f"/>
+<text x="648" y="137" text-anchor="middle" font-size="13" font-weight="700" fill="#1c1c1a">Log &amp; close</text>
+<text x="648" y="155" text-anchor="middle" font-size="10" fill="#55565a">non-serious record</text>
+
+<path d="M476,183 L476,214 L126,214 L126,247" fill="none" stroke="#c0392b" stroke-width="2" marker-end="url(#arR)"/>
+<text x="300" y="208" text-anchor="middle" font-size="10" fill="#55565a">serious → full case workup</text>
+
+<rect x="24" y="250" width="204" height="76" rx="10" fill="#ffffff" stroke="#b7b8b0"/>
+<rect x="178" y="258" width="42" height="17" rx="8" fill="#eef1f4" stroke="#dcddd6"/>
+<text x="199" y="270" text-anchor="middle" font-size="10" font-weight="700" fill="#3a5bd9">Opus</text>
+<text x="38" y="280" font-size="15" font-weight="700" fill="#1c1c1a">Safety Agent</text>
+<text x="38" y="299" font-size="10.5" fill="#55565a">P4 · openFDA tool-use loop</text>
+<text x="38" y="315" font-size="10.5" font-weight="700" fill="#3a5bd9">→ PRR · ROR · EBGM signals</text>
+<line x1="228" y1="288" x2="250" y2="288" stroke="#8a8b8f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<rect x="252" y="250" width="196" height="76" rx="10" fill="#ffffff" stroke="#b7b8b0"/>
+<rect x="398" y="258" width="42" height="17" rx="8" fill="#eef1f4" stroke="#dcddd6"/>
+<text x="419" y="270" text-anchor="middle" font-size="10" font-weight="700" fill="#3a5bd9">Opus</text>
+<text x="266" y="280" font-size="15" font-weight="700" fill="#1c1c1a">Reg Q&amp;A (RAG)</text>
+<text x="266" y="299" font-size="10.5" fill="#55565a">P2 · check vs ICH criteria</text>
+<text x="266" y="315" font-size="10.5" fill="#55565a">grounded · cited</text>
+<line x1="448" y1="288" x2="470" y2="288" stroke="#8a8b8f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<rect x="472" y="250" width="168" height="76" rx="10" fill="#ffffff" stroke="#b7b8b0"/>
+<text x="486" y="280" font-size="15" font-weight="700" fill="#1c1c1a">Draft ICSR</text>
+<text x="486" y="299" font-size="10.5" fill="#55565a">narrative from case</text>
+<text x="486" y="315" font-size="10.5" fill="#8a8b8f">triage + FAERS + reg</text>
+<line x1="640" y1="288" x2="662" y2="288" stroke="#8a8b8f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+<rect x="664" y="250" width="212" height="76" rx="10" fill="#eef1f4" stroke="#3a5bd9" stroke-width="2"/>
+<text x="678" y="280" font-size="15" font-weight="700" fill="#1c1c1a">Human review</text>
+<text x="678" y="299" font-size="10.5" fill="#55565a">PV specialist signs off</text>
+<text x="678" y="315" font-size="10.5" font-weight="700" fill="#3a5bd9">→ ICSR filed / QC'd</text>
+
+<rect x="24" y="360" width="852" height="56" rx="10" fill="#f7f7f5" stroke="#dcddd6"/>
+<text x="40" y="382" font-size="11" font-weight="700" letter-spacing="0.5" fill="#3a5bd9">TRACEABILITY SPINE</text>
+<text x="40" y="402" font-size="10.5" fill="#55565a">Every step logs: structured output · tool-call trace · source citations · case ID  →  append-only audit log for QA &amp; inspection</text>
+
+<rect x="24" y="424" width="852" height="56" rx="10" fill="#f7f7f5" stroke="#dcddd6"/>
+<text x="40" y="446" font-size="11" font-weight="700" letter-spacing="0.5" fill="#3a5bd9">VISIBLE EVALS  ·  Project 3 harness</text>
+<text x="40" y="466" font-size="10.5" fill="#55565a">Triage: typed &amp; Pydantic-validated   ·   RAG triad 4.79 / 5 (retrieval 4.57)   ·   Agent 89% match (8/9), rationale grounded 5.0 / 5</text>
+
+<rect x="24" y="488" width="852" height="56" rx="10" fill="#f7f7f5" stroke="#dcddd6"/>
+<text x="40" y="510" font-size="11" font-weight="700" letter-spacing="0.5" fill="#3a5bd9">COST &amp; RESILIENCE</text>
+<text x="40" y="530" font-size="10.5" fill="#55565a">Router: Haiku extracts/triages · Opus judges signals (~10× cheaper) · concurrent batch   ·   Demo mode: cached outputs + live/cached toggle</text>
+
+<line x1="40" y1="566" x2="62" y2="566" stroke="#c0392b" stroke-width="2"/>
+<text x="68" y="570" font-size="10" fill="#55565a">serious path</text>
+<line x1="164" y1="566" x2="186" y2="566" stroke="#2e7d4f" stroke-width="2"/>
+<text x="192" y="570" font-size="10" fill="#55565a">non-serious path</text>
+<text x="320" y="570" font-size="10" fill="#8a8b8f">Human-in-the-loop before anything is filed.</text>
+<text x="24" y="598" font-size="11" fill="#55565a">Each box is a standalone point solution, built → evaluated → deployed. This chain is an optional composition, shown only to prove they interoperate.</text>
+</svg>
