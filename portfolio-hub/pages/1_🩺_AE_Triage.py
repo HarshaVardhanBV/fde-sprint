@@ -105,7 +105,10 @@ with tab_batch:
             return "color: red" if str(val).lower() == "serious" else "color: green"
 
         st.success(f"Triaged {len(df)} reports")
-        st.dataframe(df.style.applymap(_color, subset=["seriousness"]), use_container_width=True)
+        styler = df.style
+        # pandas >= 2.1 renamed Styler.applymap -> Styler.map; support both.
+        color_fn = styler.map if hasattr(styler, "map") else styler.applymap
+        st.dataframe(color_fn(_color, subset=["seriousness"]), use_container_width=True)
         st.download_button("Download results CSV", df.to_csv(index=False).encode(),
                            "triage_results.csv", "text/csv")
         with st.expander("Raw JSON"):
